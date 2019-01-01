@@ -25,25 +25,25 @@ export default {
   methods: {
     async handellogin () {
       const res = await this.$http.post('login', this.formdata)
-      
-        //   console.log(res);
-          const {data: {data, meta: {msg,status}}} = res
-          if (status === 200) {
-            // token
-            localStorage.setItem('token',data.token)
+
+      //   console.log(res);
+      const {data: {data, meta: {msg, status}}} = res
+      if (status === 200) {
+        // token
+        localStorage.setItem('token', data.token)
         //    this.$message.success(msg)
-           this.$router.push({
-               name:'home'
-           })
-          }else{
-            this.$message.error(msg) 
-          }
-          console.log(data)
+        this.$router.push({
+          name: 'home'
+        })
+      } else {
+        this.$message.error(msg)
+      }
+      console.log(data)
     }
   }
 }
 </script>
-<style> 
+<style>
    .formwrap{
        width: 100%;
        height: 100%;
