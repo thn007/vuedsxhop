@@ -7,12 +7,15 @@ import App from './App'
 import router from './router'
 import '@/assets/index.css'
 import Http from './plugins/http'
+import moment from 'moment'
 Vue.config.productionTip = false
 // Vue.prototype.$http =axios
 
 Vue.use(ElementUI)
 Vue.use(Http)
-
+Vue.filter('format',(v)=>{
+  return moment().format('YYYY-MM-DD');
+})
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
