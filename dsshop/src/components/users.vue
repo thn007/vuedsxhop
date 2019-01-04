@@ -29,7 +29,7 @@
             </el-table-column>
             <el-table-column prop="mg_state" label="用户状态" width="80">
                 <template slot-scope="arr">
-                    <el-switch v-model="arr.row.mg_state" active-color="#13ce66" inactive-color="#ff4949">
+                    <el-switch @change="changeStatus(arr.row)"v-model="arr.row.mg_state" active-color="#13ce66" inactive-color="#ff4949">
                     </el-switch>
                 </template>
             </el-table-column>
@@ -37,7 +37,7 @@
                 <template slot-scope="arr">
                     <el-button type="primary" icon="el-icon-edit" size="mini" circle plain @click="showedit(arr.row)"></el-button>
                     <el-button type="danger" icon="el-icon-delete" @click="deleteUsers(arr.row)" size="mini" circle plain></el-button>
-                    <el-button type="success" icon="el-icon-check" size="mini" circle plain></el-button>
+                    <el-button type="success" icon="el-icon-check" size="mini" @click="showRoles(arr.row)" circle plain></el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -81,10 +81,28 @@
                 </el-form>
                 <div slot="footer" class="dialog-footer">
                     <el-button @click="dialogFormVisibleEdit = false">取 消</el-button>
-                    <el-button type="primary" @click="addRightUsers()">确 定</el-button>
+                    <el-button type="primary" @click="editUsers()">确 定</el-button>
                 </div>
     
-            </el-dialog>
+        </el-dialog>
+        <!-- 分配角色 -->
+          <el-dialog title="分配角色" :visible.sync="dialogFormVisibleRole">
+            <el-form :model="form">
+              <el-form-item label="用户名" :label-width="formLabelWidth">
+                {{Roleuser}}
+              </el-form-item>
+              <el-form-item label="角色" :label-width="formLabelWidth">
+                <el-select v-model="currUserRoleId" >
+                  <el-option label="请选择" value="-1"></el-option>
+                  <el-option v-for="(v,i) in roles" :label="v.roleName" :value="v.id"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+              <el-button @click="dialogFormVisibleRole = false">取 消</el-button>
+              <el-button type="primary" @click="edituserRoles()">确 定</el-button>
+            </div>
+          </el-dialog>
     </el-card>
 </template>
 <script>
@@ -107,7 +125,13 @@
                 },
                 dialogFormVisibleAdd: false,
                 dialogFormVisibleEdit:false,
-                formLabelWidth: "120px"
+                dialogFormVisibleRole:false,
+                formLabelWidth: "120px",
+                Roleuser:'',
+                currUserRoleId:'',
+                roles:'',
+                // curUserId:'',
+
             }
         },
         created() {
@@ -118,7 +142,7 @@
             async getUsersList() {
                 this.$http.defaults.headers.common["Authorization"] = localStorage.getItem('token');
                 const res = await this.$http.get(`users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${this.pagesize}`)
-                console.log(res)
+                // console.log(res)
                 const { data: {
                     data: { users, total },
                     meta: { msg, status }
@@ -131,13 +155,13 @@
             },
             // 分页
             handleSizeChange(val) {
-                console.log(`每页 ${val} 条`);
+                // console.log(`每页 ${val} 条`);
                 this.pagesize = val;
                 this.pagenum = 1
                 this.getUsersList();
             },
             handleCurrentChange(val) {
-                console.log(`当前页: ${val}`);
+                // console.log(`当前页: ${val}`);
                 this.pagenum = val;
                 this.getUsersList();
             },
@@ -190,9 +214,61 @@
                 });
             },
             // 显示编辑
-            showedit(user){
+            async showedit(user){
                 this. dialogFormVisibleEdit=true
+                // 发送请求，显示用户数据
+                const res =await this.$http.get(`users/${user.id}`)
+                // console.log(res)
+                this.form = user
             },
+            async editUsers(user){
+               const res = await this.$http.put(`users/${this.form.id}`,this.form)
+            //    console.log(res)
+                const {meta:{status,msg}}=res.data
+                if(status==200){
+                    this.$message.success('编辑成功')
+                    this. dialogFormVisibleEdit=false
+                }
+            },
+            async changeStatus(user){
+                const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
+                // console.log(res)
+
+            },
+            // 展示角色管理弹出层
+            async showRoles(user){
+                // console.log(user)
+                this.Roleuser=user.username
+                this.dialogFormVisibleRole=true
+                  // 显示角色列表
+                const res = await this.$http.get('roles')
+                // console.log(res)
+                const {meta:{msg,status},data}=res.data
+                if(status==200){
+                    this.roles=data
+                }
+                // 查询当前用户的角色
+                const res2 = await this.$http.get(`users/${user.id}`)
+                // console.log(res2)
+                this.currUserRoleId=res2.data.data.rid
+                this.curUserId=res2.data.data.id
+            },
+            // 修改用户角色
+            async edituserRoles(){
+                const res =await this.$http.put(`users/${this.curUserId}/role`,{
+                    rid:this.currUserRoleId
+                })
+                // console.log(res)
+                const {meta:{status,msg},data}=res.data
+                if(status==200){
+                    this.$message.success(msg)
+                    this.dialogFormVisibleRole=false
+                }
+                
+            }
+            
+          
+
         }
     }
 </script>

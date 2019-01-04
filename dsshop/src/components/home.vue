@@ -71,7 +71,7 @@
 export default{
   // 权限验证
   beforeCreate(){
-    if(!localStorage.getItem("token")){
+    if(localStorage.getItem("token")==null){
       this.$router.push({
         name:'login'
       })
